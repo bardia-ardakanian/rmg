@@ -98,7 +98,7 @@ scene.add(new THREE.GridHelper(20, 40, 0x3a4150, 0x222831));
 
 // body mesh (SMPL-X vertices from the server)
 const meshGeo = new THREE.BufferGeometry();
-const bodyMesh = new THREE.Mesh(meshGeo, new THREE.MeshStandardMaterial({ color: 0xd1b399, roughness: 0.7, side: THREE.DoubleSide }));
+const bodyMesh = new THREE.Mesh(meshGeo, new THREE.MeshStandardMaterial({ color: 0xb8bcc4, roughness: 0.85, metalness: 0.0, side: THREE.DoubleSide }));
 bodyMesh.castShadow = true; bodyMesh.visible = false; scene.add(bodyMesh);
 
 // skeleton (red joints, gray bones)

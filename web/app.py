@@ -54,6 +54,7 @@ print("ready.")
 def smooth(J, win):
     if not win or win <= 1:
         return J
+    win = win + 1 if win % 2 == 0 else win          # kernel must be odd to keep the frame count
     sig = win / 3.0
     t = np.arange(win) - win // 2
     k = np.exp(-0.5 * (t / sig) ** 2); k /= k.sum()

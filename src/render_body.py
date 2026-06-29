@@ -30,6 +30,21 @@ def look_at(eye, target, up=(0, 1, 0)):
     return m
 
 
+def smooth_time(x, win=9):
+    """Gaussian temporal smoothing along axis 0 (x: (L, ...)) to remove frame-to-frame wobble."""
+    if not win or win <= 1:
+        return x
+    win = win + 1 if win % 2 == 0 else win
+    sig = win / 3.0
+    t = np.arange(win) - win // 2
+    k = np.exp(-0.5 * (t / sig) ** 2); k /= k.sum()
+    sh = x.shape
+    xf = x.reshape(sh[0], -1)
+    xp = np.pad(xf, ((win // 2, win // 2), (0, 0)), mode="edge")
+    out = np.stack([np.convolve(xp[:, c], k, mode="valid") for c in range(xf.shape[1])], axis=1)
+    return out.reshape(sh)
+
+
 def _bones(P, radius):
     g = []
     for j, par in enumerate(PARENTS):
@@ -97,11 +112,13 @@ def main():
     ap.add_argument("--azim", type=float, default=-35.0, help="camera azimuth deg (negative = from the left)")
     ap.add_argument("--elev", type=float, default=22.0, help="camera elevation deg (positive = from above)")
     ap.add_argument("--dist", type=float, default=2.6, help="camera distance")
+    ap.add_argument("--smooth", type=int, default=9, help="temporal smoothing window (0 = off)")
     ap.add_argument("--out", default="report")
     a = ap.parse_args()
     os.makedirs(a.out, exist_ok=True)
     d = np.load(a.joints, allow_pickle=True)
     J, prompts = d["joints"], list(d["prompts"])
+    J = np.stack([smooth_time(J[i], a.smooth) for i in range(J.shape[0])])   # de-wobble
     r = pyrender.OffscreenRenderer(a.res, a.res)
     Rfix = trimesh.transformations.rotation_matrix(np.radians(a.roty), [0, 1, 0])[:3, :3]
     az, el = np.radians(a.azim), np.radians(a.elev)         # 3/4 view: top-left, looking down

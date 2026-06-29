@@ -92,17 +92,17 @@ pass `--smooth 0` to turn it off.
 
 ### samples
 
-smpl-x body mesh fit to the joints:
+mannequin (smpl-x) body mesh fit to the joints:
 
-| "a person walks forward" | "a person sits down" |
-|---|---|
-| ![walk mesh](figures/walk_mesh.gif) | ![sit mesh](figures/sit_mesh.gif) |
+| "a person walks forward" | "a person sits down" | "a person is jumping" |
+|---|---|---|
+| ![walk mesh](figures/walk_mesh.gif) | ![sit mesh](figures/sit_mesh.gif) | ![jump mesh](figures/jump_mesh.gif) |
 
 joints + skeleton, no body model:
 
-| "a person walks forward" | "a person sits down" |
-|---|---|
-| ![walk skeleton](figures/walk_skeleton.gif) | ![sit skeleton](figures/sit_skeleton.gif) |
+| "a person walks forward" | "a person sits down" | "a person is jumping" |
+|---|---|---|
+| ![walk skeleton](figures/walk_skeleton.gif) | ![sit skeleton](figures/sit_skeleton.gif) | ![jump skeleton](figures/jump_skeleton.gif) |
 
 ## web demo
 
