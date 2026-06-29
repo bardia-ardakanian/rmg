@@ -81,40 +81,41 @@ python src/rmg_eval.py --ckpt runs/rmg_base/model.pth --n 1024 --guidance 6.5 --
 everything renders from the generated joints, 3/4 camera with a ground shadow.
 
 ```bash
-python src/rmg_gen_smpl.py      --ckpt runs/rmg_base/model.pth --out figures/joints.npz   # generate + export joints
-python src/render_mannequin.py  --joints figures/joints.npz --mode montage --out figures  # smpl-x body + ghost trail (png)
-python src/render_mannequin.py  --joints figures/joints.npz --mode gif     --out figures  # same, animated
-python src/render_body.py       --joints figures/joints.npz --mode both --out figures     # capsule body or joints+skeleton (no smplx)
+python src/rmg_gen_smpl.py    --ckpt runs/rmg_base/model.pth --out figures/joints.npz \
+    --prompts "a man is performing taichi movement" "a person runs for a while and then jumps with all his strength"
+python src/render_robot.py    --joints figures/joints.npz --glb assets_xbot.glb --mode montage --out figures   # rigged robot + ghost trail (png)
+python src/render_robot.py    --joints figures/joints.npz --glb assets_xbot.glb --mode gif     --out figures   # same, animated
+python src/render_mannequin.py --joints figures/joints.npz --mode montage --out figures        # alt: smpl-x body / --body capsule
 ```
 
-render_mannequin is the one the web demo mirrors. the paper renders a smpl body (loper et al. 2015), so we
-do the same: fit smpl-x to the generated joints and render it as a smooth gray clay body, shown the way
-figure 1 does it, with a few poses across the motion left behind as fading ghosts, zoomed out so a walk
-tracks across the floor instead of wandering off frame, prompt baked in at the bottom. point `SMPLX_PATH`
-at your smpl-x models (in config.sh). `--body capsule` skips the body model and draws a plain capsule
-figure instead. everything smooths the joints over time (`--smooth`, default 9) so it doesnt jitter.
+the body is a rigged robot mannequin (mixamo xbot, the same one the web demo uses). our model outputs smpl
+joint rotations, so render_robot retargets those directions onto the robot's bones (swing-only, verified to
+match the pose exactly), skins the mesh, and shows it the way the paper's figure 1 does it: a few poses
+across the motion left behind as fading ghosts, zoomed out so a run tracks across the floor, prompt baked
+in. `scripts/get_robot.sh` fetches the model. render_mannequin.py is the from-scratch alternative (smpl-x
+body, or `--body capsule`). everything smooths the joints over time (`--smooth`, default 9).
 
 ### samples
 
-rendered by render_mannequin.py (montage mode), the same smpl-x body + ghost look the web demo shows and
-what its "save png / save gif" exports:
+reproducing the paper's figure 1 prompts with the robot mannequin (montage mode, same look the web demo
+shows and what its "save png / save gif" export):
 
 | | | |
 |---|---|---|
-| ![walk](figures/walk_mann.png) | ![sit](figures/sit_mann.png) | ![jump](figures/jump_mann.png) |
+| ![still then jump+spin](figures/robot_spin.png) | ![taichi](figures/robot_taichi.png) | ![run then jump](figures/robot_run.png) |
 
 and animated, where the ghost trail follows the motion:
 
 | | | |
 |---|---|---|
-| ![walk](figures/walk_mann.gif) | ![sit](figures/sit_mann.gif) | ![jump](figures/jump_mann.gif) |
+| ![spin](figures/robot_spin.gif) | ![taichi](figures/robot_taichi.gif) | ![run](figures/robot_run.gif) |
 
 ## web demo
 
 theres an interactive viewer too. type a prompt, it generates on whatever machine runs the server, and the
-browser shows the motion in 3d as the same gray mannequin with the fading ghost trail (or a skeleton if you
-flip the toggle). orbit with the mouse, play/scrub. save png or gif both bake in the ghosts and the prompt
-caption, so what you export is exactly what the readme samples above look like.
+browser drives the same rigged robot mannequin in 3d with the fading ghost trail (or a skeleton if you flip
+the toggle). orbit with the mouse, play/scrub, pick a body colour, toggle the ground shadow. save png or
+gif both bake in the ghosts and the prompt caption, so what you export matches the readme samples above.
 
 ```bash
 python web/app.py        # port 8000

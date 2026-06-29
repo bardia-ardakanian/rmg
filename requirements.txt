@@ -13,3 +13,4 @@ pyrender
 trimesh
 smplx
 flask
+pygltflib

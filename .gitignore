@@ -19,3 +19,4 @@ figures/*.mp4
 .DS_Store
 !figures/.gitkeep
 !data/.gitkeep
+*.glb
