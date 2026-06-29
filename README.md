@@ -57,13 +57,15 @@ web/        the interactive viewer
 
 ```bash
 pip install -r requirements.txt
+cp config.example.sh config.sh && $EDITOR config.sh   # set your data/model/cache paths here
+source config.sh
 bash scripts/setup.sh
 ```
 
-setup.sh grabs the guo evaluators and glove, clones the text-to-motion and humanml3d repos, and caches the
-qwen encoder. it prints the env vars to export (T2M_EVAL, T2M_REPO, HML3D_REPO). the humanml3d dataset
-itself needs amass access and the smpl pipeline so the script cant just pull it, see `data/README.md`. point
-`HML_DIR` at it once you have it.
+all paths live in `config.sh` (copied from `config.example.sh`). it's gitignored on purpose, so dataset and
+model locations stay out of the repo. setup.sh grabs the guo evaluators and glove, clones the text-to-motion
+and humanml3d repos, and caches the qwen encoder. the humanml3d dataset itself needs amass access and the
+smpl pipeline so the script cant just pull it, see `data/README.md`. point `HML_DIR` at it once you have it.
 
 ## running it
 
@@ -141,11 +143,13 @@ port of motionmillion's `recover_from_local_rotation`. captions are llm-written 
 sit packed in `texts.tar.gz` so `mm_prep.py` streams the tar instead of unpacking 1.5M tiny files, and
 the qwen embeddings get precomputed once into a memmap.
 
-the dataset is gated, request access on huggingface (`VankouF/MotionMillion`). on our box its already at
-`$MM_ROOT`. trained on <gpu-host> (<gpu-host>, one rtx 5090 32gb).
+the dataset is gated, request access on huggingface (`VankouF/MotionMillion`). point `MM_ROOT` at it in
+`config.sh` (copy `config.example.sh` and fill in your paths; config.sh is gitignored so machine paths stay
+out of the repo). trained on one rtx 5090 (32gb).
 
 ```bash
-export MM_ROOT=$MM_ROOT
+cp config.example.sh config.sh && $EDITOR config.sh   # set MM_ROOT / MM_META / HF_HOME for your machine
+source config.sh
 bash scripts/mm_setup.sh        # extract the split lists, sanity-check the dataset
 bash scripts/mm_prep.sh         # clip index + qwen caption embeddings -> cache/mm_train_*
 bash scripts/run_rmg_mm.sh      # train -> runs/rmg_mm   (STEPS / BATCH / ACCUM / WORKERS overridable)

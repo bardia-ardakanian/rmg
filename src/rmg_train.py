@@ -7,7 +7,7 @@ Live monitoring: tqdm bar + runs/<out>/progress.txt + auto-updating loss_curve.p
 (scalars: loss / loss_ema / lr / grad_norm, and periodic generated-sample skeleton figures).
 
     python rmg_train.py --steps 150000 --batch 64 --accum 4 --out runs/rmg_base
-    tensorboard --logdir runs --port 6006     # view via:  ssh -L 6006:localhost:6006 <gpu-host>
+    tensorboard --logdir runs --port 6006     # view via:  ssh -L 6006:localhost:6006 <host>
 """
 import argparse
 import math

@@ -27,9 +27,9 @@ from torch.utils.data import Dataset
 
 import s3
 
-MM_ROOT = os.environ.get("MM_ROOT", "$MM_ROOT")
+MM_ROOT = os.environ.get("MM_ROOT", "data/MotionMillion")
 # split lists live inside split.tar.gz; mm_prep extracts them here (the dataset dir isn't ours to write)
-MM_META = os.environ.get("MM_META", "$MM_META")
+MM_META = os.environ.get("MM_META", "cache/mm_meta")
 NJ = 22
 UNIT = 4
 MINLEN = 60

@@ -1,7 +1,7 @@
 """Fit SMPL-X to generated joint positions (SMPLify), then render a human body-mesh GIF from a 3/4 angle
 with a shadow and a visible floor. Run in an env with smplx + pyrender (EGL headless).
 
-    python fit_render_mesh.py --joints report/mesh_joints.npz --model_path ~/smplx/models --out report
+    python fit_render_mesh.py --joints report/mesh_joints.npz --model_path $SMPLX_PATH --out report
 """
 import argparse
 import os
@@ -70,7 +70,7 @@ def mat(rgb, rough=0.7):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--joints", default="report/mesh_joints.npz")
-    ap.add_argument("--model_path", default=os.path.expanduser("~/smplx/models"))
+    ap.add_argument("--model_path", default=os.environ.get("SMPLX_PATH", "models/smplx"))
     ap.add_argument("--iters", type=int, default=500)
     ap.add_argument("--res", type=int, default=512)
     ap.add_argument("--fps", type=int, default=20)

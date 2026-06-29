@@ -22,7 +22,7 @@ import torch
 
 import so3
 
-HML = os.environ.get("HML_DIR", "$HML_DIR")
+HML = os.environ.get("HML_DIR", "data/HumanML3D")
 NUM_JOINTS = 22
 _Y = torch.tensor([0.0, 1.0, 0.0])
 

@@ -76,8 +76,8 @@ from utils.metrics import (
 # ---------------------------------------------------------------------------------------------------
 # Paths / constants
 # ---------------------------------------------------------------------------------------------------
-HML = os.environ.get("HML_DIR", "$HML_DIR")
-EVAL_ROOT = os.environ.get("T2M_EVAL", os.path.expanduser("~/rmg/motion_real/t2m_eval"))
+HML = os.environ.get("HML_DIR", "data/HumanML3D")
+EVAL_ROOT = os.environ.get("T2M_EVAL", "data/t2m_eval")
 FINEST = os.path.join(EVAL_ROOT, "t2m/text_mot_match/model/finest.tar")
 META_DIR = os.path.join(EVAL_ROOT, "t2m/Comp_v6_KLD01/meta")          # Comp_v6 normalization stats
 GLOVE_DIR = os.path.join(EVAL_ROOT, "glove")
@@ -611,7 +611,7 @@ def main():
     ap = argparse.ArgumentParser(description="Official HumanML3D T2M evaluation harness (self-verifying).")
     ap.add_argument("--mode", choices=["validate", "model"], default="validate",
                     help="validate = Stage 1 gate; model = Stage 2 (our v2). 'model' also runs the gate first.")
-    ap.add_argument("--ckpt", default=os.path.expanduser("~/rmg/motion_real/runs/hml_vfm/model.pth"))
+    ap.add_argument("--ckpt", default=os.environ.get("RMG_CKPT", "runs/rmg_base/model.pth"))
     ap.add_argument("--n", type=int, default=4384,
                     help="validate: # GT pairs (cap=test size). model: # generated samples.")
     ap.add_argument("--steps", type=int, default=100, help="flow.sample steps (Stage 2).")

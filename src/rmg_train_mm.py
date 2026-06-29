@@ -6,7 +6,7 @@ Run mm_prep.py first to build the index + embedding memmap, then:
 
     python rmg_train_mm.py --index cache/mm_train_index.npz --emb cache/mm_train_emb.npy \
         --steps 300000 --batch 64 --accum 4 --workers 12 --out runs/rmg_mm
-    tensorboard --logdir runs --port 6006     # ssh -L 6006:localhost:6006 <gpu-host>
+    tensorboard --logdir runs --port 6006     # ssh -L 6006:localhost:6006 <host>
 
 Live: tqdm bar + runs/<out>/progress.txt + loss_curve.png + TensorBoard (loss / loss_ema / lr / grad_norm).
 """

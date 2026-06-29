@@ -9,7 +9,7 @@ import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 for p in [os.path.join(HERE, "..", "src"), os.path.join(HERE, ".."),
-          os.environ.get("MOTION_REAL", os.path.expanduser("~/rmg/motion_real"))]:
+          os.environ.get("MOTION_REAL", "")]:
     if os.path.isdir(p):
         sys.path.insert(0, p)
 
@@ -26,7 +26,7 @@ from rmg_flow import RMGFlow
 
 PARENTS = [-1, 0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 9, 9, 12, 13, 14, 16, 17, 18, 19]
 CKPT = os.environ.get("RMG_CKPT", os.path.join(HERE, "..", "runs", "rmg_base", "model.pth"))
-SMPLX_PATH = os.environ.get("SMPLX_PATH", os.path.expanduser("~/smplx/models"))
+SMPLX_PATH = os.environ.get("SMPLX_PATH", "models/smplx")
 DEV = "cuda" if torch.cuda.is_available() else "cpu"
 
 print(f"loading {CKPT} on {DEV} ...")

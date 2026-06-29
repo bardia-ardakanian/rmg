@@ -2,6 +2,8 @@ __pycache__/
 *.pyc
 runs/
 external/
+config.sh
+cache/
 data/t2m_eval/
 data/HumanML3D/
 data/*.pt

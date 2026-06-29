@@ -27,7 +27,7 @@ from common.skeleton import Skeleton
 import hml_data
 import metrics
 
-HML = os.environ.get("HML_DIR", "$HML_DIR")
+HML = os.environ.get("HML_DIR", "data/HumanML3D")
 
 _skel = Skeleton(torch.tensor(paramUtil.t2m_raw_offsets).float(), paramUtil.t2m_kinematic_chain, "cpu")
 _skel.set_offset(_skel.get_offsets_joints(torch.from_numpy(np.load(f"{HML}/new_joints/000021.npy")).float()[0]))
