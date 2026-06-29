@@ -292,46 +292,55 @@ function compose(){
   x.fillText(t, w/2, h+bar/2); return c;
 }
 function download(url,name){ const a=document.createElement('a'); a.href=url; a.download=name; a.click(); }
-// pose `now` with the pelvis centred at the origin (each keyframe panel shows the body centred)
-function placeCentered(P) {
-  retarget(now.bones, P);
-  now.root.position.set(-hh.x, 0, -hh.z);
-  now.root.updateMatrixWorld(true);
-  let rf = 1e9; for (const b of FOOTB) rf = Math.min(rf, now.bones[b].getWorldPosition(_fv).y);
+function ensurePool(N){ while(kfRobots.length<N){ const r=makeRobot(robotProto,1,true); r.root.visible=false; kfRobots.push(r); } }
+function placeAt(inst, P, X){                                     // pose at keyframe, pelvis at world x=X, feet on floor
+  retarget(inst.bones, P);
+  inst.root.position.set(X - hh.x, 0, -hh.z);
+  inst.root.updateMatrixWorld(true);
+  let rf = 1e9; for (const b of FOOTB) rf = Math.min(rf, inst.bones[b].getWorldPosition(_fv).y);
   let sf = 1e9; for (const p of P) sf = Math.min(sf, p[1]);
-  now.root.position.y = sf - rf + 0.02;
+  inst.root.position.y = sf - rf + 0.02;
 }
-// save png as a filmstrip: N keyframes side by side, each pose centred in its own panel, fading by recency
+// save png like the paper: N copies of the person on ONE floor, one per keyframe, evenly spaced in a row
 $('savePng').onclick = () => {
   if (!joints) { renderer.render(scene,camera); return download(compose().toDataURL('image/png'),'motion.png'); }
   const N = Math.min(+$('kf').value, nframes);
   let Hs = 0; for (const Pf of joints) { let mn=1e9,mx=-1e9; for (const p of Pf){mn=Math.min(mn,p[1]);mx=Math.max(mx,p[1]);} if(mx-mn>Hs)Hs=mx-mn; }
-  const PW = 340, PH = 500, BAR = Math.round(PH * 0.14);
-  const strip = document.createElement('canvas'); strip.width = N*PW; strip.height = PH + BAR;
-  const sx = strip.getContext('2d'); sx.fillStyle = '#eef0f4'; sx.fillRect(0,0,strip.width,strip.height);
+  ensurePool(N);
+  const sc = Hs/bindH;
+  // pass 1: pose each copy centred and measure its width, so spacing leaves a small consistent gap
+  let maxW = 0; const frames = [];
+  for (let i=0;i<N;i++) {
+    const f = (N===1)?frame:Math.round(i*(nframes-1)/(N-1)); frames.push(f);
+    const inst = kfRobots[i]; inst.root.scale.setScalar(sc); placeAt(inst, joints[f], 0); inst.root.updateMatrixWorld(true);
+    let mn=1e9, mx=-1e9; for (const bn in inst.bones) { const bx = inst.bones[bn].getWorldPosition(_fv).x; if(bx<mn)mn=bx; if(bx>mx)mx=bx; }
+    if (mx-mn > maxW) maxW = mx-mn;
+  }
+  const spacing = maxW + 0.14, Wrow = (N-1)*spacing;                      // figure width + small gap
+  const Hpx = 520, BAR = Math.round(Hpx*0.13), aspect = (Wrow+1.1)/(Hs+0.5), Wpx = Math.min(4200, Math.round(Hpx*aspect));
   const ss = renderer.getSize(new THREE.Vector2()), cp = camera.position.clone(), ct = controls.target.clone(), ca = camera.aspect;
-  ghosts.forEach(g=>g.root.visible=false); skel.g.visible=false; now.root.visible=true;
-  renderer.setSize(PW, PH); camera.aspect = PW/PH;
-  const th = Math.tan(camera.fov*Math.PI/360), dist = (Hs+0.55)/2/th*1.12, ty = Hs*0.5;
-  const az = -30*Math.PI/180, el = 13*Math.PI/180;
+  now.root.visible=false; ghosts.forEach(g=>g.root.visible=false); skel.g.visible=false; kfRobots.forEach(k=>k.root.visible=false);
+  renderer.setSize(Wpx, Hpx); camera.aspect = Wpx/Hpx;
+  for (let i=0;i<N;i++) {
+    const inst = kfRobots[i]; inst.root.visible=true;
+    for (const m of inst.mats) { m.color.setHex(robotColor); m.transparent=false; m.opacity=1; m.depthWrite=true; m.needsUpdate=true; }
+    inst.root.traverse(o=>{ if(o.isMesh) o.castShadow = $('showShadow').checked; });
+    placeAt(inst, joints[frames[i]], (i-(N-1)/2)*spacing);
+  }
+  const th = Math.tan(camera.fov*Math.PI/360), ar = Wpx/Hpx;
+  const dist = Math.max((Hs+0.5)/2/th, (Wrow/2+0.55)/(th*ar))*1.1, ty = Hs*0.46, az = -10*Math.PI/180, el = 10*Math.PI/180;
   camera.position.set(dist*Math.cos(el)*Math.sin(az), ty+dist*Math.sin(el), dist*Math.cos(el)*Math.cos(az));
   controls.target.set(0,ty,0); camera.lookAt(0,ty,0); camera.updateProjectionMatrix();
-  for (let i=0;i<N;i++) {
-    const f = (N===1)?frame:Math.round(i*(nframes-1)/(N-1)), last = (i===N-1), a = 0.22 + 0.78*(i/(N-1));
-    placeCentered(joints[f]);
-    for (const m of now.mats) { m.color.setHex(robotColor); m.transparent=!last; m.opacity=last?1:a; m.depthWrite=last; m.needsUpdate=true; }
-    now.root.traverse(o=>{ if(o.isMesh) o.castShadow = last && $('showShadow').checked; });
-    renderer.render(scene,camera);
-    sx.drawImage(renderer.domElement, i*PW, 0, PW, PH);
-  }
-  sx.fillStyle = '#282a30'; sx.textAlign = 'center'; sx.textBaseline = 'middle';
-  let fs = Math.round(BAR*0.46); sx.font = '700 '+fs+'px system-ui, sans-serif'; const t = '"'+prompt+'"';
-  while (sx.measureText(t).width > strip.width*0.96 && fs > 9) { fs--; sx.font = '700 '+fs+'px system-ui, sans-serif'; }
-  sx.fillText(t, strip.width/2, PH + BAR/2);
-  download(strip.toDataURL('image/png'), 'motion.png');
+  renderer.render(scene,camera);
+  const c = document.createElement('canvas'); c.width = Wpx; c.height = Hpx+BAR; const x = c.getContext('2d');
+  x.fillStyle = '#eef0f4'; x.fillRect(0,0,Wpx,Hpx+BAR); x.drawImage(renderer.domElement,0,0);
+  x.fillStyle = '#282a30'; x.textAlign = 'center'; x.textBaseline = 'middle';
+  let fs = Math.round(BAR*0.5); x.font = '700 '+fs+'px system-ui, sans-serif'; const t = '"'+prompt+'"';
+  while (x.measureText(t).width > Wpx*0.96 && fs > 9) { fs--; x.font = '700 '+fs+'px system-ui, sans-serif'; }
+  x.fillText(t, Wpx/2, Hpx+BAR/2);
+  download(c.toDataURL('image/png'), 'motion.png');
+  kfRobots.forEach(k=>k.root.visible=false); now.root.visible=true;
   renderer.setSize(ss.x, ss.y); camera.aspect = ca; camera.position.copy(cp); controls.target.copy(ct); camera.updateProjectionMatrix();
-  for (const m of now.mats) { m.transparent=false; m.opacity=1; m.depthWrite=true; m.needsUpdate=true; }
-  now.root.traverse(o=>{ if(o.isMesh) o.castShadow = $('showShadow').checked; });
   setFrame(frame);
 };
 $('saveGif').onclick = async () => {
