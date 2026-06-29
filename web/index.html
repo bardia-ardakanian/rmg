@@ -25,6 +25,7 @@
   select { width: 100%; padding: 7px; border-radius: 6px; border: 1px solid #d1d5db; background: #fff; }
   #status { margin-top: 12px; color: #6b7280; font-size: 12px; min-height: 16px; }
   #view { flex: 1; position: relative; }
+  #cap { position: absolute; top: 18px; left: 50%; transform: translateX(-50%); background: rgba(38,40,46,.82); color: #fff; padding: 8px 18px; border-radius: 20px; font-weight: 600; font-size: 15px; max-width: 78%; text-align: center; pointer-events: none; opacity: 0; transition: opacity .2s; }
   #hud { position: absolute; left: 14px; bottom: 12px; right: 14px; display: flex; align-items: center; gap: 10px; background: rgba(255,255,255,.85); padding: 8px 12px; border-radius: 8px; border: 1px solid #dfe3ea; }
   #hud input[type=range] { flex: 1; }
   canvas { display: block; }
@@ -36,7 +37,7 @@
     <h1>rmg motion demo</h1>
     <div class="sub">type a prompt, generate, drag to orbit</div>
     <label>prompt</label>
-    <textarea id="prompt">a person walks forward</textarea>
+    <textarea id="prompt">a person stands on one leg in yoga pose</textarea>
     <div class="chips" id="chips"></div>
     <label>guidance <span class="val" id="gv">6.5</span></label>
     <input type="range" id="guidance" min="1" max="9" step="0.5" value="6.5">
@@ -44,17 +45,22 @@
     <input type="range" id="length" min="40" max="196" step="4" value="120">
     <label>smoothing <span class="val" id="sv">9</span></label>
     <input type="range" id="smooth" min="0" max="19" step="1" value="9">
-    <button id="gen">generate</button>
+    <div class="row">
+      <button id="gen">generate</button>
+      <button id="vary" title="same prompt, a different motion">vary &#8635;</button>
+    </div>
     <div class="chk"><input type="checkbox" id="showGhost" checked><label for="showGhost" style="margin:0">motion ghosts (trail)</label></div>
     <div class="chk"><input type="checkbox" id="showSkel"><label for="showSkel" style="margin:0">skeleton instead of robot</label></div>
     <div class="chk"><input type="checkbox" id="showShadow" checked><label for="showShadow" style="margin:0">ground shadow</label></div>
     <label>robot color</label>
     <select id="bodyColor">
+      <option value="auto">auto (a colour per motion)</option>
       <option value="0xdfe3ea">robot white</option>
-      <option value="0x86d96b">green</option>
-      <option value="0xe8c84d">yellow</option>
+      <option value="0xd9b08c">tan</option>
+      <option value="0xd98c9e">rose</option>
+      <option value="0x8cb3d9">blue</option>
+      <option value="0x9ccf9c">green</option>
       <option value="0xb586e0">purple</option>
-      <option value="0x5bc7c0">teal</option>
       <option value="0xe8975a">orange</option>
     </select>
     <div class="row">
@@ -64,8 +70,10 @@
     <div id="status">loading robot...</div>
   </div>
   <div id="view">
+    <div id="cap"></div>
     <div id="hud">
       <button class="sec" id="play" style="width:auto;margin:0;padding:6px 12px">pause</button>
+      <button class="sec" id="reset" style="width:auto;margin:0;padding:6px 12px" title="restart from the beginning">reset</button>
       <input type="range" id="frame" min="0" max="0" value="0">
       <span id="fc" style="color:#6b7280;font-size:12px">0/0</span>
     </div>
@@ -107,18 +115,22 @@ const view = $('view');
 const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
 renderer.setPixelRatio(devicePixelRatio); renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 view.appendChild(renderer.domElement);
-const scene = new THREE.Scene(); scene.background = new THREE.Color(BG);
-const camera = new THREE.PerspectiveCamera(45, 1, 0.01, 100);
-camera.position.set(-2.4, 1.7, 3.0);
+const scene = new THREE.Scene();
+function canvasTex(draw, rep) { const c=document.createElement('canvas'); c.width=c.height=512; draw(c.getContext('2d'),512); const t=new THREE.CanvasTexture(c); if(rep){ t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.set(rep,rep); t.anisotropy=8; } return t; }
+scene.background = canvasTex((x,n)=>{ const g=x.createLinearGradient(0,0,0,n); g.addColorStop(0,'#aeb4c0'); g.addColorStop(0.55,'#cfd4dc'); g.addColorStop(1,'#e9ecf1'); x.fillStyle=g; x.fillRect(0,0,n,n); });
+const camera = new THREE.PerspectiveCamera(42, 1, 0.01, 200);
+camera.position.set(-2.8, 2.0, 3.6);
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.target.set(0, 0.9, 0); controls.enableDamping = true;
-scene.add(new THREE.HemisphereLight(0xffffff, 0xb8bcc6, 0.85));
-const key = new THREE.DirectionalLight(0xffffff, 2.6); key.position.set(3, 6, 2); key.castShadow = true;
-key.shadow.mapSize.set(2048, 2048); key.shadow.camera.near = 0.5; key.shadow.camera.far = 25;
-key.shadow.camera.left = key.shadow.camera.bottom = -6; key.shadow.camera.right = key.shadow.camera.top = 6;
-key.shadow.bias = -0.0002; scene.add(key);
-const fill = new THREE.DirectionalLight(0xffffff, 0.7); fill.position.set(-3, 2, 1.5); scene.add(fill);
-const ground = new THREE.Mesh(new THREE.PlaneGeometry(40, 40), new THREE.MeshStandardMaterial({ color: FLOOR_TONE, roughness: 1 }));
+scene.add(new THREE.HemisphereLight(0xffffff, 0xc4c8d2, 0.9));
+const key = new THREE.DirectionalLight(0xffffff, 2.5); key.position.set(3, 6, 2); key.castShadow = true;
+key.shadow.mapSize.set(2048, 2048); key.shadow.camera.near = 0.5; key.shadow.camera.far = 30;
+key.shadow.camera.left = key.shadow.camera.bottom = -8; key.shadow.camera.right = key.shadow.camera.top = 8;
+key.shadow.bias = -0.0002; key.shadow.radius = 4; scene.add(key);
+const fill = new THREE.DirectionalLight(0xffffff, 0.6); fill.position.set(-3, 2, 1.5); scene.add(fill);
+// soft checkerboard floor (like the project page)
+const checker = canvasTex((x,n)=>{ const s=n/8; for(let i=0;i<8;i++)for(let j=0;j<8;j++){ x.fillStyle=((i+j)%2)?'#e4e7ec':'#eef1f5'; x.fillRect(i*s,j*s,s,s); } }, 28);
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(120, 120), new THREE.MeshStandardMaterial({ map: checker, roughness: 0.95 }));
 ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; scene.add(ground);
 
 // ---- robot retargeting (validated: every bone direction matches the SMPL pose, dot=1) ----
@@ -128,7 +140,10 @@ const _u = new THREE.Vector3(), _w = new THREE.Vector3();
 const dir = (P,a,b) => _u.set(P[b][0]-P[a][0],P[b][1]-P[a][1],P[b][2]-P[a][2]).normalize().clone();
 const fromTo = (u,v) => new THREE.Quaternion().setFromUnitVectors(u,v);
 
-let robotColor = 0xdfe3ea, now = null, ghosts = [], allRobots = [];
+const PALETTE = [0xd9b08c, 0xd98c9e, 0x8cb3d9, 0x9ccf9c, 0xd9c46b, 0xb59cd9, 0x6bcfc4, 0xe0976b];  // a different colour per motion
+let robotColor = PALETTE[0], colorIdx = 0, now = null, ghosts = [], allRobots = [];
+function applyColor() { for (const r of allRobots) for (const m of r.mats) m.color.setHex(robotColor); }
+function nextColor() { const sel = $('bodyColor').value; robotColor = (sel === 'auto') ? PALETTE[(colorIdx++) % PALETTE.length] : parseInt(sel, 16); applyColor(); }
 function makeRobot(original, opacity, shadow) {
   const root = skeletonClone(original); root.scale.setScalar(SCALE);
   const bones = {}, mats = [];
@@ -196,8 +211,8 @@ function frameCamera(){
   for(const Pf of joints) for(const p of Pf){ mnx=Math.min(mnx,p[0]);mxx=Math.max(mxx,p[0]);mny=Math.min(mny,p[1]);mxy=Math.max(mxy,p[1]);mnz=Math.min(mnz,p[2]);mxz=Math.max(mxz,p[2]); }
   const cx=(mnx+mxx)/2, cz=(mnz+mxz)/2, H=mxy-mny, W=Math.max(mxx-mnx,mxz-mnz)+0.6, fov=camera.fov*Math.PI/180;
   const aspect=Math.max(0.4,(view.clientWidth/view.clientHeight)||1.6), th=Math.tan(fov/2);
-  const dist=Math.max(2.6,(H+0.5)/2/th, Math.min((W/2)/(th*aspect),4.3))*1.18;
-  const ty=mny+H*0.46+0.1, az=-32*Math.PI/180, el=13*Math.PI/180;
+  const dist=Math.max(3.0,(H+0.5)/2/th, Math.min((W/2)/(th*aspect),4.6))*1.5;   // pulled back, like the page
+  const ty=mny+H*0.46+0.1, az=-32*Math.PI/180, el=16*Math.PI/180;
   controls.target.set(cx,ty,cz);
   camera.position.set(cx+dist*Math.cos(el)*Math.sin(az), ty+dist*Math.sin(el), cz+dist*Math.cos(el)*Math.cos(az));
   controls.update();
@@ -205,13 +220,15 @@ function frameCamera(){
 
 const status = m => $('status').textContent = m || '';
 for (const [el,out] of [['guidance','gv'],['length','lv'],['smooth','sv']]) $(el).oninput = () => $(out).textContent = $(el).value;
-['walks forward','sits down','is jumping','waves with the right hand','runs in a circle','kicks with the left leg']
-  .forEach(p => { const c=document.createElement('span'); c.className='chip'; c.textContent=p; c.onclick=()=>$('prompt').value='a person '+p; $('chips').appendChild(c); });
+['stands on one leg in yoga pose','does a salsa dance','performs a standing back kick','is dancing','does a moonwalk','walks forward']
+  .forEach(p => { const c=document.createElement('span'); c.className='chip'; c.textContent=p; c.onclick=()=>{ $('prompt').value='a person '+p; generate(); }; $('chips').appendChild(c); });
 $('showGhost').onchange = $('showSkel').onchange = () => setFrame(frame);
-$('bodyColor').onchange = () => { robotColor = parseInt($('bodyColor').value,16); for(const r of allRobots) for(const m of r.mats) m.color.setHex(robotColor); };
+$('bodyColor').onchange = () => { if ($('bodyColor').value !== 'auto') { robotColor = parseInt($('bodyColor').value,16); applyColor(); } };
 $('showShadow').onchange = () => { for(const r of allRobots) r.root.traverse(o=>{ if(o.isMesh && o.material.opacity===1) o.castShadow=$('showShadow').checked; }); };
 $('frame').oninput = e => { playing=false; $('play').textContent='play'; setFrame(+e.target.value); };
 $('play').onclick = () => { playing=!playing; $('play').textContent=playing?'pause':'play'; };
+$('reset').onclick = () => { if(!joints) return; playing=true; $('play').textContent='pause'; frameCamera(); setFrame(0); };
+$('vary').onclick = () => generate();        // same prompt, new seed -> a different motion (a colour too)
 
 new GLTFLoader().load(ROBOT_URL, (g) => {
   const original = g.scene; original.updateMatrixWorld(true);
@@ -236,8 +253,9 @@ async function generate() {
       body: JSON.stringify({ prompt:$('prompt').value, guidance:+$('guidance').value, length:+$('length').value, smooth:+$('smooth').value, mesh:false, seed:Math.floor(Math.random()*1e6) }) });
     const d = await r.json();
     joints = d.joints; PARENTS = d.parents || PARENTS_DEF; fps = d.fps || 20; nframes = joints.length; prompt = d.prompt;
-    every = Math.max(2, Math.round(nframes/24)); frameCamera();
+    every = Math.max(2, Math.round(nframes/24)); frameCamera(); nextColor();
     $('frame').max = nframes-1; playing=true; $('play').textContent='pause'; setFrame(0);
+    $('cap').textContent = '"'+d.prompt+'"'; $('cap').style.opacity = 1;
     status('"'+d.prompt+'"  ('+nframes+' frames)');
   } catch(e){ status('error: '+e); }
   $('gen').disabled = false;
