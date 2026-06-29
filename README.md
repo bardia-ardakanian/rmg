@@ -36,6 +36,11 @@ covariance, the number of ode steps) plus fid being biased high at this sample c
 their own table, and the baselines are in [docs/RESULTS.md](docs/RESULTS.md), raw numbers in
 `results/metrics_humanml3d.json`.
 
+## trained on
+
+one rtx 5090 (driver 595.71.05, cuda 12.8) on ubuntu 24.04. conda 26.3.2, python 3.12,
+torch 2.11.0+cu128. the full 150k steps took about 10.5 hours.
+
 ## layout
 
 ```
