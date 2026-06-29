@@ -79,36 +79,39 @@ python src/rmg_eval.py --ckpt runs/rmg_base/model.pth --n 1024 --guidance 6.5 --
 everything renders from the generated joints, 3/4 camera with a ground shadow.
 
 ```bash
-python src/rmg_gen_smpl.py    --ckpt runs/rmg_base/model.pth --out figures/joints.npz   # generate + export joints
-python src/fit_render_mesh.py --joints figures/joints.npz --out figures                 # smpl-x body mesh (needs smplx)
-python src/render_body.py     --joints figures/joints.npz --mode both --out figures      # capsule body or joints+skeleton
-python src/render_rmg.py      --ckpt runs/rmg_base/model.pth --weights raw               # quick matplotlib stick figure
+python src/rmg_gen_smpl.py      --ckpt runs/rmg_base/model.pth --out figures/joints.npz   # generate + export joints
+python src/render_mannequin.py  --joints figures/joints.npz --mode montage --out figures  # paper-style mannequin + ghost trail (png)
+python src/render_mannequin.py  --joints figures/joints.npz --mode gif     --out figures  # same, animated
+python src/render_body.py       --joints figures/joints.npz --mode both --out figures     # plain capsule body or joints+skeleton
+python src/fit_render_mesh.py   --joints figures/joints.npz --out figures                 # smpl-x body mesh (needs smplx)
 ```
 
-fit_render_mesh fits smpl-x to the joints (the right way to do it, since humanml3d rotations arent actual
-smpl pose params) and gives a real body. render_body needs no body model, just a capsule figure or a
-joints+skeleton one. all of them smooth the joints over time (`--smooth`, default 9) so it doesnt jitter,
-pass `--smooth 0` to turn it off.
+render_mannequin is the one the web demo mirrors: a smooth gray artist mannequin built straight from the
+joints (no body model needed), shown the way the paper's figure 1 does it, a few poses across the motion
+left behind as fading ghosts, zoomed out so a walk tracks across the floor instead of wandering off frame,
+prompt baked in at the bottom. all of them smooth the joints over time (`--smooth`, default 9) so it doesnt
+jitter, pass `--smooth 0` to turn it off.
 
 ### samples
 
-mannequin (smpl-x) body mesh fit to the joints:
+these are straight out of the web demo's renderer (montage mode):
 
-| "a person walks forward" | "a person sits down" | "a person is jumping" |
+| | | |
 |---|---|---|
-| ![walk mesh](figures/walk_mesh.gif) | ![sit mesh](figures/sit_mesh.gif) | ![jump mesh](figures/jump_mesh.gif) |
+| ![walk](figures/walk_mann.png) | ![sit](figures/sit_mann.png) | ![jump](figures/jump_mann.png) |
 
-joints + skeleton, no body model:
+and animated, where the ghost trail follows the motion:
 
-| "a person walks forward" | "a person sits down" | "a person is jumping" |
+| | | |
 |---|---|---|
-| ![walk skeleton](figures/walk_skeleton.gif) | ![sit skeleton](figures/sit_skeleton.gif) | ![jump skeleton](figures/jump_skeleton.gif) |
+| ![walk](figures/walk_mann.gif) | ![sit](figures/sit_mann.gif) | ![jump](figures/jump_mann.gif) |
 
 ## web demo
 
 theres an interactive viewer too. type a prompt, it generates on whatever machine runs the server, and the
-browser shows the motion in 3d. orbit with the mouse, play/scrub, switch between body and skeleton, export a
-png or a gif.
+browser shows the motion in 3d as the same gray mannequin with the fading ghost trail (or a skeleton if you
+flip the toggle). orbit with the mouse, play/scrub. save png or gif both bake in the ghosts and the prompt
+caption, so what you export is exactly what the readme samples above look like.
 
 ```bash
 python web/app.py        # port 8000
