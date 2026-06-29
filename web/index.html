@@ -221,7 +221,7 @@ function frameCamera(){
   for(const Pf of joints) for(const p of Pf){ mnx=Math.min(mnx,p[0]);mxx=Math.max(mxx,p[0]);mny=Math.min(mny,p[1]);mxy=Math.max(mxy,p[1]);mnz=Math.min(mnz,p[2]);mxz=Math.max(mxz,p[2]); }
   const cx=(mnx+mxx)/2, cz=(mnz+mxz)/2, H=mxy-mny, W=Math.max(mxx-mnx,mxz-mnz)+0.6, fov=camera.fov*Math.PI/180;
   const aspect=Math.max(0.4,(view.clientWidth/view.clientHeight)||1.6), th=Math.tan(fov/2);
-  const dist=Math.max(3.8,(H+0.5)/2/th, Math.min((W/2)/(th*aspect),5.2))*1.95;   // pulled further back
+  const dist=Math.max(7.5,(H+0.5)/2/th, Math.min((W/2)/(th*aspect),7.0))*2.6;     // way back (scroll to fine-tune)
   const ty=mny+H*0.46+0.1, az=-32*Math.PI/180, el=16*Math.PI/180;
   controls.target.set(cx,ty,cz);
   camera.position.set(cx+dist*Math.cos(el)*Math.sin(az), ty+dist*Math.sin(el), cz+dist*Math.cos(el)*Math.cos(az));
