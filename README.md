@@ -1,4 +1,4 @@
-# rmg reproduction (unofficial)
+# Riemannian Motion Generation, arXiv:2603.15016, unofficial
 
 my own reimplementation of RMG ("Riemannian Motion Generation", arXiv:2603.15016), since the authors havent
 released their code. text to motion on humanml3d. the method is theirs, i just rebuilt it from the paper, so
