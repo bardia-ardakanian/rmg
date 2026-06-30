@@ -176,6 +176,29 @@ bash scripts/run_rmg_mm.sh      # train -> runs/rmg_mm   (STEPS / BATCH / ACCUM 
 bash scripts/tb.sh              # tensorboard on 6006
 ```
 
+### result: does it scale?
+
+short version: yes, the method trains stably at this scale. the run finished its full **300k steps** in ~30.6h
+on the one 5090, loss converged to **0.0105** (ema 0.0108), no divergence, no babysitting. 458k clips, the same
+31M-param model, untouched.
+
+what i'm deliberately NOT doing is putting our number next to the paper's. motionmillion's paper, "Go to Zero"
+([arXiv:2507.07095](https://arxiv.org/abs/2507.07095)), is a *scaling* paper, and its whole point is bigger wins:
+
+| MotionMillion (their own evaluator) | FID ↓ | R@1 ↑ | R@3 ↑ | params |
+|---|---|---|---|---|
+| ScaMo | 89.0 | 0.67 | 0.87 | — |
+| Go-to-Zero | 31.3 | 0.74 | 0.92 | 1B |
+| Go-to-Zero | 10.8 | 0.79 | 0.94 | 3B |
+| Go-to-Zero | 10.3 | 0.79 | 0.94 | 7B |
+
+their *smallest* model is **1B — 32x bigger than ours (31M); the 7B is 226x.** the benchmark is also zero-shot
+and human-verified, the architecture is a different beast (autoregressive FSQ tokens + flan-t5, not continuous
+flow matching), and FID only means anything inside their evaluator's feature space. their evaluator *is*
+released, so the number is obtainable — it's just not an honest comparison at this scale, and i'd rather leave
+it out than dress up "31M loses to 7B" as a result. the takeaway that *is* honest: RMG's representation +
+riemannian flow matching scale to motionmillion-size data with zero changes and train stably to convergence.
+
 ## stuff i ran into
 
 - qwen pooling. qwen3-embedding wants last-token pooling with left padding, then an l2 normalize (see
