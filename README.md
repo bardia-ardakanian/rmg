@@ -179,8 +179,7 @@ bash scripts/tb.sh              # tensorboard on 6006
 ### result: does it scale?
 
 short version: yes, the method trains stably at this scale. the run finished its full **300k steps** in ~30.6h
-on the one 5090, loss converged to **0.0105** (ema 0.0108), no divergence, no babysitting. 458k clips, the same
-31M-param model, untouched.
+on the one 5090, loss converged to **0.0105** (ema 0.0108). 458k clips, the same 31M-param model, untouched.
 
 what i'm deliberately NOT doing is putting our number next to the paper's. motionmillion's paper, "Go to Zero"
 ([arXiv:2507.07095](https://arxiv.org/abs/2507.07095)), is a *scaling* paper, and its whole point is bigger wins:
